@@ -103,6 +103,7 @@ public class Minesweeper {
             public void mouseClicked(MouseEvent e) {
                 numOfMinesField.setEditable(true);
                 numOfMinesField.setFocusable(true);
+                numOfMinesField.requestFocus();
             }
 
             @Override
