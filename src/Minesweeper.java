@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
@@ -19,20 +20,31 @@ public class Minesweeper {
         }
     }
 
+    private class MineTextField extends JTextField {
+        String oldValue;
+
+        MineTextField(String oldValue) {
+            this.oldValue = oldValue;
+        }
+    }
+
     int tileSize = 70;
     int numRows = 8;
     int numColumns = 8;
     int boardWidth = numColumns * tileSize;
     int boardHeight = numRows * tileSize;
+    int mineCount = 10; // number of mines to randomly place
 
     JFrame frame = new JFrame("Minesweeper");
+    JPanel headerPanel = new JPanel();
     JLabel textLabel = new JLabel();
     JPanel textPanel = new JPanel();
     JPanel boardPanel = new JPanel();
     JPanel buttonPanel = new JPanel();
     JButton restartButton = new JButton("Restart");
+    MineTextField numOfMinesField = new MineTextField(Integer.toString(mineCount));
+    JPanel numMinesPanel = new JPanel();
 
-    int mineCount = 10; // number of mines to randomly place
     MineTile[][] board = new MineTile[numRows][numColumns];
     ArrayList<MineTile> mineList;
     Random random = new Random();
@@ -50,12 +62,73 @@ public class Minesweeper {
 
         textLabel.setFont(new Font("Arial", Font.BOLD, 25));
         textLabel.setHorizontalAlignment(JLabel.CENTER);
-        textLabel.setText("Minesweeper: " + Integer.toString(mineCount));
+        textLabel.setText("Minesweeper: ");
         textLabel.setOpaque(true);
 
         textPanel.setLayout(new BorderLayout());
         textPanel.add(textLabel);
-        frame.add(textPanel, BorderLayout.NORTH);
+        headerPanel.add(textPanel);
+
+        numOfMinesField.setText(Integer.toString(mineCount));
+        numOfMinesField.setEditable(false);
+        numOfMinesField.setFocusable(false);
+        numOfMinesField.setFont(new Font("Arial", Font.BOLD, 25));
+        numOfMinesField.setColumns(2);
+        numOfMinesField.setBorder(null);
+
+        numOfMinesField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String text = numOfMinesField.getText();
+                    int numMines = Integer.parseInt(text);
+                    if (numMines < 1 || numMines > numRows * numColumns) {
+                        numOfMinesField.setText(numOfMinesField.oldValue);
+                        return;
+                    }
+                    mineCount = numMines;
+                    numOfMinesField.oldValue = text;
+                    numOfMinesField.setEditable(false);
+                    numOfMinesField.setFocusable(false);
+                    restartGame();
+                } catch (Exception exception) {
+                    numOfMinesField.setText(numOfMinesField.oldValue);
+                    return;
+                }
+            }
+        });
+
+        numOfMinesField.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                numOfMinesField.setEditable(true);
+                numOfMinesField.setFocusable(true);
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                numOfMinesField.setText(numOfMinesField.oldValue);
+                numOfMinesField.setEditable(false);
+                numOfMinesField.setFocusable(false);
+            }
+        });
+
+        numMinesPanel.add(numOfMinesField);
+        headerPanel.add(numMinesPanel);
+
+        frame.add(headerPanel, BorderLayout.NORTH);
 
         restartButton.setFocusable(false);
         buttonPanel.add(restartButton);
@@ -144,6 +217,7 @@ public class Minesweeper {
 
         gameOver = true;
         textLabel.setText("Game Over");
+        numOfMinesField.setVisible(false);
     }
 
     void checkMine(int r, int c) {
@@ -188,6 +262,7 @@ public class Minesweeper {
         if (tilesClicked == numRows * numColumns - mineList.size()) {
             gameOver = true;
             textLabel.setText("You win!");
+            numOfMinesField.setVisible(false);
         }
     }
 
@@ -204,7 +279,8 @@ public class Minesweeper {
     void restartGame() {
         tilesClicked = 0;
         gameOver = false;
-        textLabel.setText("Minesweeper: " + Integer.toString(mineCount));
+        textLabel.setText("Minesweeper: ");
+        numOfMinesField.setVisible(true);
         for (int r = 0; r < numRows; r++) {
             for (int c = 0; c < numColumns; c++) {
                 MineTile tile = board[r][c];
